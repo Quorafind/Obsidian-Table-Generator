@@ -10,6 +10,9 @@ export default defineConfig(({mode}) => {
     if (mode === 'production') {
         prod = true;
     }
+    if (mode === 'development') {
+        prod = false;
+    }
     return {
         plugins: [
             svelte({

@@ -44,15 +44,16 @@ export default class TableGeneratorPlugin extends Plugin {
             }
         });
 
-        this.registerDomEvent(window, 'click', (evt: MouseEvent) => {
-                if ((evt.targetNode as HTMLElement)?.classList.contains("table-generator-menu") || (evt.targetNode as HTMLElement)?.parentElement?.classList.contains("table-generator-menu")) return;
-                if ((evt.targetNode as HTMLElement) === null) hideTable(true);
-                if (!this.tableGeneratorEl?.contains(evt.targetNode as HTMLElement))
-                    hideTable();
-            }
-        );
 
         if (requireApiVersion("0.15.0")) {
+            this.registerDomEvent(window, 'click', (evt: MouseEvent) => {
+                    if ((evt.targetNode as HTMLElement)?.classList.contains("table-generator-menu") || (evt.targetNode as HTMLElement)?.parentElement?.classList.contains("table-generator-menu")) return;
+                    if ((evt.targetNode as HTMLElement) === null) hideTable(true);
+                    if (!this.tableGeneratorEl?.contains(evt.targetNode as HTMLElement))
+                        hideTable();
+                }
+            );
+
             this.app.workspace.on('window-open', (leaf) => {
                 this.registerDomEvent(leaf.doc, 'click', (evt: MouseEvent) => {
                     if ((evt.target as HTMLElement).classList.contains("table-generator-menu") || (evt.target as HTMLElement).parentElement?.classList.contains("table-generator-menu")) return;
