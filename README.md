@@ -2,7 +2,7 @@
 
 A plugin for generate markdown table quickly like Typora.
 
-https://raw.githubusercontent.com/Quorafind/Obsidian-Table-Generator/master/media/example.mp4
+![example.gif](https://raw.githubusercontent.com/Quorafind/Obsidian-Table-Generator/master/media/example.gif)
 
 # Features
 
