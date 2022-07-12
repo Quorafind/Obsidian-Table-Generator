@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-svelte-starter",
-	"name": "Svelte Starter",
-	"version": "1.0.3",
+	"id": "obsidian-table-generator",
+	"name": "Table Generator",
+	"version": "1.1.0",
 	"minAppVersion": "0.12.0",
-	"description": "A plugin development template for devs who want to use svelte in Obsidian.",
+	"description": "A plugin for generate markdown table quickly like Typora.",
 	"author": "Quorafind",
-	"authorUrl": "https://obsidian.md",
+	"authorUrl": "https://github.com/Quorafind",
 	"isDesktopOnly": false
 }

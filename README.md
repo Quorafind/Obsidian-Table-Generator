@@ -1,43 +1,36 @@
-# obsidian-react-starter
+# Obsidian Table Generator
 
-A starter template for creating an Obsidian plugin with SvelteJS.
+A plugin for generate markdown table quickly like Typora.
+
+![example](https://raw.githubusercontent.com/quorafind/obsidian-table-generator/master/media/example.mp4)
 
 # Features
 
-This project comes preconfigured with [Typescript](https://www.typescriptlang.org/), [vite](https://vitejs.dev), and
-[Rollup.js](https://rollupjs.org).
+- You can use `obsidian-table-generator` to generate markdown table quickly.
 
-# Getting Started
+# Settings
 
-Click "use this template" to create your own fork of this repo. Make sure to reference the official sample plugin for
-information about how to get started with the Obsidian API and how to submit your plugin to the Community Plugin
-Gallery.
+- You can set the default table rows/columns.
 
-```bash
-# for local development
-npm install
-npm run dev
-// Or yarn dev
+## How to Install
 
-# for a production bundle
-npm install
-npm run build
-// Or yarn build
+### From Plugin Market in Obsidian
 
-# change version
-npm bumpversion
-// Or yarn bumpversion
-```
+💜: [Not available now] Directly install from Obsidian Market.
 
-# Stats
+### From BRAT
 
-The production output of this sample plugin is ~10 KB.
+🚗: Add `Quorafind/Obsidian-Table-Generator` to BRAT.
 
-```
-./styles.css   0.44 KiB / gzip: 0.19 KiB
-./main.js      12.63 KiB / gzip: 3.70 KiB
-```
+### Download Manually
 
-## API Documentation
+🚚: Download the latest release. Extract and put the three files (main.js, manifest.json, styles.css) to
+folder `{{obsidian_vault}}/.obsidian/plugins/Obsidian-Table-Generator`.
 
-See https://github.com/obsidianmd/obsidian-api
+## Say Thank You
+
+If you are enjoy using Obsidian-Table-Generator then please support my work and enthusiasm by buying me a coffee
+on [https://www.buymeacoffee.com/boninall](https://www.buymeacoffee.com/boninall).
+
+<a href="https://www.buymeacoffee.com/boninall"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=boninall&button_colour=6495ED&font_colour=ffffff&font_family=Lato&outline_colour=000000&coffee_colour=FFDD00"></a>
+

@@ -4,9 +4,12 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import autoPreprocess from 'svelte-preprocess';
 import builtins from 'builtin-modules';
 
-const prod = (process.argv[2] === 'production');
+let prod = false;
 
-export default defineConfig(() => {
+export default defineConfig(({mode}) => {
+    if (mode === 'production') {
+        prod = true;
+    }
     return {
         plugins: [
             svelte({
@@ -22,7 +25,7 @@ export default defineConfig(() => {
                 ignoreTryCatch: false,
             },
             lib: {
-                entry: path.resolve(__dirname, './src/starterIndex.ts'),
+                entry: path.resolve(__dirname, './src/tableGeneratorIndex.ts'),
                 formats: ['cjs'],
             },
             css: {},
