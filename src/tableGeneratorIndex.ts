@@ -10,6 +10,7 @@ import {
 import { tableGeneratorMenu } from './tableGeneratorMenu';
 import TableGenerator from "./ui/TableGenerator.svelte";
 import { hideTable } from "./utils/modifiedTable";
+import "./css/tableGeneratorDefault.css";
 
 interface TableGeneratorPluginSettings {
     rowCount: number;
@@ -32,13 +33,17 @@ export default class TableGeneratorPlugin extends Plugin {
             this.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, view: MarkdownView) => this.handleTableGeneratorMenu(menu, editor, view))
         );
 
-        this.addSettingTab(new SampleSettingTab(this.app, this));
+        this.addSettingTab(new tableGeneratorSettingTab(this.app, this));
+        this.registerInterval(window.setTimeout(() => {
+                this.saveSettings();
+            }, 100)
+        );
 
         // Check click and cancel the menu if the click is outside the menu
-
         this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-            if ((evt.target as HTMLElement).classList.contains("table-generator-menu") || (evt.target as HTMLElement).parentElement?.classList.contains("table-generator-menu")) return;
-            if (!this.tableGeneratorEl?.contains(evt.target as HTMLElement)) {
+            const target = evt.target as HTMLElement;
+            if (target.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu")) return;
+            if (!this.tableGeneratorEl?.contains(target)) {
                 if (!document.body.contains(this.tableGeneratorEl)) return;
                 hideTable();
             }
@@ -47,17 +52,19 @@ export default class TableGeneratorPlugin extends Plugin {
 
         if (requireApiVersion("0.15.0")) {
             this.registerDomEvent(window, 'click', (evt: MouseEvent) => {
-                    if ((evt.targetNode as HTMLElement)?.classList.contains("table-generator-menu") || (evt.targetNode as HTMLElement)?.parentElement?.classList.contains("table-generator-menu")) return;
-                    if ((evt.targetNode as HTMLElement) === null) hideTable(true);
-                    if (!this.tableGeneratorEl?.contains(evt.targetNode as HTMLElement))
+                    const target = evt.target as HTMLElement;
+                    if (target?.classList.contains("table-generator-menu") || target?.parentElement?.classList.contains("table-generator-menu")) return;
+                    if (target === null) hideTable(true);
+                    if (!this.tableGeneratorEl?.contains(target))
                         hideTable();
                 }
             );
 
             this.app.workspace.on('window-open', (leaf) => {
                 this.registerDomEvent(leaf.doc, 'click', (evt: MouseEvent) => {
-                    if ((evt.target as HTMLElement).classList.contains("table-generator-menu") || (evt.target as HTMLElement).parentElement?.classList.contains("table-generator-menu")) return;
-                    if (!this.tableGeneratorEl?.contains(evt.target as HTMLElement)) {
+                    const target = evt.target as HTMLElement;
+                    if (target?.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu")) return;
+                    if (!this.tableGeneratorEl?.contains(target)) {
                         if (!activeDocument.body.contains(this.tableGeneratorEl)) return;
                         hideTable();
                     }
@@ -75,8 +82,6 @@ export default class TableGeneratorPlugin extends Plugin {
         }
 
         this.tableGeneratorEl.className = "table-generator-view";
-        this.tableGeneratorEl.style.position = "absolute";
-        this.tableGeneratorEl.style.border = "1px solid black";
         this.tableGeneratorEl.style.display = "none";
 
         if (requireApiVersion("0.15.0")) {
@@ -123,21 +128,12 @@ export default class TableGeneratorPlugin extends Plugin {
     }
 }
 
-class SampleSettingTab extends PluginSettingTab {
+class tableGeneratorSettingTab extends PluginSettingTab {
     plugin: TableGeneratorPlugin;
-    private applyDebounceTimer = 0;
 
     constructor(app: App, plugin: TableGeneratorPlugin) {
         super(app, plugin);
         this.plugin = plugin;
-    }
-
-    applySettingsUpdate() {
-        clearTimeout(this.applyDebounceTimer);
-        const plugin = this.plugin;
-        this.applyDebounceTimer = window.setTimeout(() => {
-            plugin.saveSettings();
-        }, 100);
     }
 
     display(): void {
@@ -158,7 +154,6 @@ class SampleSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         rowText.innerText = ` ${ value.toString() }`;
                         this.plugin.settings.rowCount = value;
-                        this.applySettingsUpdate();
                     }),
             )
             .settingEl.createDiv("", (el) => {
@@ -179,7 +174,6 @@ class SampleSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         columnText.innerText = ` ${ value.toString() }`;
                         this.plugin.settings.columnCount = value;
-                        this.applySettingsUpdate();
                     }),
             )
             .settingEl.createDiv("", (el) => {
