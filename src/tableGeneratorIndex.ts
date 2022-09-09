@@ -35,14 +35,14 @@ export default class TableGeneratorPlugin extends Plugin {
 
         this.addSettingTab(new tableGeneratorSettingTab(this.app, this));
         this.registerInterval(window.setTimeout(() => {
-                this.saveSettings();
-            }, 100)
+            this.saveSettings();
+        }, 100)
         );
 
         // Check click and cancel the menu if the click is outside the menu
         this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
             const target = evt.target as HTMLElement;
-            if (target.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu")) return;
+            if (target.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu")||target?.tagName=="BUTTON") return;
             if (!this.tableGeneratorEl?.contains(target)) {
                 if (!document.body.contains(this.tableGeneratorEl)) return;
                 hideTable();
@@ -52,23 +52,37 @@ export default class TableGeneratorPlugin extends Plugin {
 
         if (requireApiVersion("0.15.0")) {
             this.registerDomEvent(window, 'click', (evt: MouseEvent) => {
-                    const target = evt.target as HTMLElement;
-                    if (target?.classList.contains("table-generator-menu") || target?.parentElement?.classList.contains("table-generator-menu")) return;
-                    if (target === null) hideTable(true);
-                    if (!this.tableGeneratorEl?.contains(target))
-                        hideTable();
-                }
+                const target = evt.target as HTMLElement;
+                if (target?.classList?.contains("table-generator-menu") || target?.parentElement?.classList?.contains("table-generator-menu")||target.activeDocument?.activeElement.nodeName=="BUTTON"||target?.tagName=="BUTTON") return;
+                if (target === null) hideTable(true);
+                target.activeDocument?true:!this.tableGeneratorEl?.contains(target)?hideTable():true;
+            }
             );
 
             this.app.workspace.on('window-open', (leaf) => {
                 this.registerDomEvent(leaf.doc, 'click', (evt: MouseEvent) => {
                     const target = evt.target as HTMLElement;
-                    if (target?.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu")) return;
+                    if (target?.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu")||target.tagName=="BUTTON") return;
                     if (!this.tableGeneratorEl?.contains(target)) {
                         if (!activeDocument.body.contains(this.tableGeneratorEl)) return;
-                        hideTable();
+                       hideTable();
                     }
                 });
+            });
+            this.addCommand({
+                id: 'create-table-genertator',
+                name: 'createTableGenerator',
+                callback: () => {
+                    if (activeDocument.body.querySelector(".table-generator-view")) return;
+                    const activeLeaf = app.workspace.getActiveViewOfType(MarkdownView);
+                    if (activeLeaf) {
+                        const view = activeLeaf;
+                        const editor = view.editor;
+                        this.createTableGeneratorMenu(editor, this);
+                        tableGeneratorMenu( editor, this.tableGeneratorEl);
+                    }
+                }
+
             });
         }
 
@@ -102,7 +116,7 @@ export default class TableGeneratorPlugin extends Plugin {
                 .setIcon("table")
                 .onClick(async () => {
                     this.createTableGeneratorMenu(editor, this);
-                    tableGeneratorMenu(app, this, menu, editor, view, this.tableGeneratorEl);
+                    tableGeneratorMenu(editor, this.tableGeneratorEl);
                 });
         });
     }
@@ -152,16 +166,16 @@ class tableGeneratorSettingTab extends PluginSettingTab {
                     .setLimits(2, 12, 1)
                     .setValue(this.plugin.settings.rowCount)
                     .onChange(async (value) => {
-                        rowText.innerText = ` ${ value.toString() }`;
+                        rowText.innerText = ` ${value.toString()}`;
                         this.plugin.settings.rowCount = value;
                     }),
             )
             .settingEl.createDiv("", (el) => {
-            rowText = el;
-            el.style.minWidth = "2.3em";
-            el.style.textAlign = "right";
-            el.innerText = ` ${ this.plugin.settings.rowCount.toString() }`;
-        });
+                rowText = el;
+                el.style.minWidth = "2.3em";
+                el.style.textAlign = "right";
+                el.innerText = ` ${this.plugin.settings.rowCount.toString()}`;
+            });
 
         let columnText: HTMLDivElement;
         new Setting(containerEl)
@@ -172,16 +186,16 @@ class tableGeneratorSettingTab extends PluginSettingTab {
                     .setLimits(2, 12, 1)
                     .setValue(this.plugin.settings.columnCount)
                     .onChange(async (value) => {
-                        columnText.innerText = ` ${ value.toString() }`;
+                        columnText.innerText = ` ${value.toString()}`;
                         this.plugin.settings.columnCount = value;
                     }),
             )
             .settingEl.createDiv("", (el) => {
-            columnText = el;
-            el.style.minWidth = "2.3em";
-            el.style.textAlign = "right";
-            el.innerText = ` ${ this.plugin.settings.columnCount.toString() }`;
-        });
+                columnText = el;
+                el.style.minWidth = "2.3em";
+                el.style.textAlign = "right";
+                el.innerText = ` ${this.plugin.settings.columnCount.toString()}`;
+            });
 
         this.containerEl.createEl('h2', { text: 'Say Thank You' });
 
