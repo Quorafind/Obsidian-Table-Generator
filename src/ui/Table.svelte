@@ -4,7 +4,7 @@
     export let rowNum: number = 8;
     export let colNum: number = 8;
     export let hoverTableEnd: number[];
-    export let insertTable: (selectedTableEnd: number[]) => {};
+    export let insertTable: (selectedTableEnd: number[]) => void;
 
     let grid = [rowNum, colNum];
 

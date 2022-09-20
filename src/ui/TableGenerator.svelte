@@ -53,7 +53,7 @@
 
 <div class="table-generator">
     <div class="H1">Table Generator</div>
-    <Table {...settings} {insertTable} bind:selectedTableEnd={selectedTableEnd}
+    <Table {...settings} {insertTable}
            bind:hoverTableEnd={hoverTableEnd}/>
     <div class="input-table-generator">
         <div class="input-table-generator-row">
