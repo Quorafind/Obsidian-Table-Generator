@@ -7,7 +7,6 @@
 
     export let editor: Editor;
     export let plugin: TableGeneratorPlugin;
-    let selectedTableEnd: number[] = [];
     let hoverTableEnd: number[];
     let gridRow: number;
     let gridCol: number;
