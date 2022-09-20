@@ -7,7 +7,7 @@ export interface Coords {
     bottom: number;
 }
 
-export const tableGeneratorMenu = (app: App, plugin: TableGeneratorPlugin, menu: Menu, editor: Editor, view: MarkdownView, tableGeneratorBoard: HTMLElement) => {
+export const tableGeneratorMenu = ( editor: Editor, tableGeneratorBoard: HTMLElement) => {
     const cursor = editor.getCursor('from');
 
     let coords: Coords;
