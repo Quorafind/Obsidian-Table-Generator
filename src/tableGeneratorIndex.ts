@@ -7,14 +7,19 @@ import {
     PluginSettingTab, requireApiVersion,
     Setting
 } from 'obsidian';
-import { tableGeneratorMenu } from './tableGeneratorMenu';
 import TableGenerator from "./ui/TableGenerator.svelte";
-import { hideTable } from "./utils/modifiedTable";
 import "./css/tableGeneratorDefault.css";
 
 interface TableGeneratorPluginSettings {
     rowCount: number;
     columnCount: number;
+}
+
+interface Coords {
+    top: number;
+    left: number;
+    bottom: number;
+    height: number;
 }
 
 const DEFAULT_SETTINGS: TableGeneratorPluginSettings = {
@@ -23,91 +28,73 @@ const DEFAULT_SETTINGS: TableGeneratorPluginSettings = {
 }
 
 export default class TableGeneratorPlugin extends Plugin {
-    tableGeneratorEl: HTMLElement;
+    tableGeneratorEl: HTMLElement | null = null;
+    tableGeneratorComponent: TableGenerator;
     settings: TableGeneratorPluginSettings;
 
     async onload() {
-        await this.loadSettings();
-
         this.registerEvent(
-            this.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, view: MarkdownView) => this.handleTableGeneratorMenu(menu, editor, view))
+            this.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, view: MarkdownView) => this.handleCreateTableGeneratorInMenu(menu, editor, view))
         );
 
-        this.addSettingTab(new tableGeneratorSettingTab(this.app, this));
-        this.registerInterval(window.setTimeout(() => {
-            this.saveSettings();
-        }, 100)
-        );
+        // Register Settings Stuff
+        await this.registerSettings();
 
         // Check click and cancel the menu if the click is outside the menu
-        this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-            const target = evt.target as HTMLElement;
-            if (target.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu")||target?.tagName=="BUTTON") return;
-            if (!this.tableGeneratorEl?.contains(target)) {
-                if (!document.body.contains(this.tableGeneratorEl)) return;
-                hideTable();
-            }
-        });
+        this.registerDomEvent(window, 'click', (evt: MouseEvent) => this.handleHideTableGeneratorMenu(evt));
+        // Handle same mouseevent in multi windows when used in newer version like 0.15.0
+        if (requireApiVersion("0.15.0")) this.registerTableGeneratorMenu();
 
-
-        if (requireApiVersion("0.15.0")) {
-            this.registerDomEvent(window, 'click', (evt: MouseEvent) => {
-                const target = evt.target as HTMLElement;
-                if (target?.classList?.contains("table-generator-menu") || target?.parentElement?.classList?.contains("table-generator-menu")||target.activeDocument?.activeElement.nodeName=="BUTTON"||target?.tagName=="BUTTON") return;
-                if (target === null) hideTable(true);
-                target.activeDocument?true:!this.tableGeneratorEl?.contains(target)?hideTable():true;
-            }
-            );
-
-            this.app.workspace.on('window-open', (leaf) => {
-                this.registerDomEvent(leaf.doc, 'click', (evt: MouseEvent) => {
-                    const target = evt.target as HTMLElement;
-                    if (target?.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu")||target.tagName=="BUTTON") return;
-                    if (!this.tableGeneratorEl?.contains(target)) {
-                        if (!activeDocument.body.contains(this.tableGeneratorEl)) return;
-                       hideTable();
-                    }
-                });
-            });
-            this.addCommand({
-                id: 'create-table-genertator',
-                name: 'createTableGenerator',
-                callback: () => {
-                    if (activeDocument.body.querySelector(".table-generator-view")) return;
-                    const activeLeaf = app.workspace.getActiveViewOfType(MarkdownView);
-                    if (activeLeaf) {
-                        const view = activeLeaf;
-                        const editor = view.editor;
-                        this.createTableGeneratorMenu(editor, this);
-                        tableGeneratorMenu( editor, this.tableGeneratorEl);
-                    }
+        this.addCommand({
+            id: 'create-table-genertator',
+            name: 'createTableGenerator',
+            callback: () => {
+                if (activeDocument.body.querySelector(".table-generator-view")) return;
+                const activeLeaf = app.workspace.getActiveViewOfType(MarkdownView);
+                if (activeLeaf) {
+                    const view = activeLeaf;
+                    const editor = view.editor;
+                    this.createTableGeneratorMenu(editor, this);
+                    this.showTableGeneratorView(editor, this.tableGeneratorEl);
                 }
+            }
 
-            });
-        }
+        });
+    }
 
+    handleHideTableGeneratorMenu(evt: MouseEvent) {
+        const target = evt.target as HTMLElement;
+
+        if (!this.tableGeneratorEl || !target) return;
+        if (target.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu") || target?.tagName == "BUTTON") return;
+        if (this.tableGeneratorEl?.contains(target)) return;
+        if (!document.body.contains(this.tableGeneratorEl)) return;
+
+        this.tableGeneratorEl.detach();
     }
 
     createTableGeneratorMenu(editor: Editor, plugin: TableGeneratorPlugin) {
+        // Check if this tableGeneratorEl is already created, if so delete it;
+        if (this.tableGeneratorEl) this.tableGeneratorEl.detach();
+
         if (requireApiVersion("0.15.0")) {
             this.tableGeneratorEl = activeDocument.createElement("div");
+            activeDocument.body.appendChild(this.tableGeneratorEl);
         } else {
             this.tableGeneratorEl = document.createElement("div");
+            document.body.appendChild(this.tableGeneratorEl);
         }
 
         this.tableGeneratorEl.className = "table-generator-view";
-        this.tableGeneratorEl.style.display = "none";
+        this.tableGeneratorEl.hide();
 
-        if (requireApiVersion("0.15.0")) {
-            activeDocument.body.appendChild(this.tableGeneratorEl);
-        } else {
-            document.body.appendChild(this.tableGeneratorEl);
-        }
-        new TableGenerator({ target: this.tableGeneratorEl, props: { editor: editor, plugin: plugin } });
-
+        this.tableGeneratorComponent = new TableGenerator({
+            target: this.tableGeneratorEl,
+            props: { editor: editor, plugin: plugin }
+        });
     }
 
-    handleTableGeneratorMenu(menu: Menu, editor: Editor, view: MarkdownView) {
+    handleCreateTableGeneratorInMenu(menu: Menu, editor: Editor, view: MarkdownView) {
         menu.addItem((item) => {
             const itemDom = (item as any).dom as HTMLElement;
             itemDom.addClass("table-generator-menu");
@@ -116,20 +103,62 @@ export default class TableGeneratorPlugin extends Plugin {
                 .setIcon("table")
                 .onClick(async () => {
                     this.createTableGeneratorMenu(editor, this);
-                    tableGeneratorMenu(editor, this.tableGeneratorEl);
+                    this.showTableGeneratorView(editor, this.tableGeneratorEl);
                 });
         });
     }
 
-    onunload() {
-        if (this.tableGeneratorEl === undefined) return;
-        if (!(this.tableGeneratorEl instanceof HTMLElement)) return;
-        if (requireApiVersion("0.15.0")) {
-            if (!activeDocument.body.contains(this.tableGeneratorEl)) return;
-            activeDocument.body.removeChild(this.tableGeneratorEl);
+
+    showTableGeneratorView(editor: Editor, tableGeneratorBoard: HTMLElement | null) {
+        if (!tableGeneratorBoard) return;
+
+        const cursor = editor.getCursor('from');
+        let coords: Coords;
+
+        // Get the cursor position using the appropriate CM5 or CM6 interface
+        if ((editor as any).cursorCoords) {
+            coords = (editor as any).cursorCoords(true, 'window');
+        } else if ((editor as any).coordsAtPos) {
+            const offset = editor.posToOffset(cursor);
+            coords = (editor as any).cm.coordsAtPos?.(offset) ?? (editor as any).coordsAtPos(offset);
         } else {
-            if (!document.body.contains(this.tableGeneratorEl)) return;
-            document.body.removeChild(this.tableGeneratorEl);
+            return;
+        }
+
+        const calculateTop = (requireApiVersion("0.15.0") ?
+            activeDocument : document)?.body.getBoundingClientRect().height - coords.top - coords.height;
+        tableGeneratorBoard.style.transform = "translate(" + (coords.left) + "px, " + "-" + (calculateTop) + "px" + ")";
+        tableGeneratorBoard.style.display = 'unset';
+    }
+
+    async registerSettings() {
+        await this.loadSettings();
+        this.addSettingTab(new TableGeneratorSettingTab(this.app, this));
+        this.registerInterval(window.setTimeout(() => {
+                this.saveSettings();
+            }, 100)
+        );
+    }
+
+    registerTableGeneratorMenu() {
+        this.app.workspace.on('window-open', (leaf) => {
+            this.registerDomEvent(leaf.doc, 'click', (evt: MouseEvent) => {
+                const target = evt.target as HTMLElement;
+
+                if (!this.tableGeneratorEl || !target) return;
+                if (target.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu") || target?.tagName == "BUTTON") return;
+                if (this.tableGeneratorEl?.contains(target)) return;
+                if (!activeDocument.body.contains(this.tableGeneratorEl)) return;
+
+                this.tableGeneratorEl.detach();
+            });
+        });
+    }
+
+    onunload() {
+        if (this.tableGeneratorEl) {
+            this.tableGeneratorComponent.$destroy();
+            this.tableGeneratorEl.detach();
         }
     }
 
@@ -142,7 +171,7 @@ export default class TableGeneratorPlugin extends Plugin {
     }
 }
 
-class tableGeneratorSettingTab extends PluginSettingTab {
+class TableGeneratorSettingTab extends PluginSettingTab {
     plugin: TableGeneratorPlugin;
 
     constructor(app: App, plugin: TableGeneratorPlugin) {
@@ -166,16 +195,15 @@ class tableGeneratorSettingTab extends PluginSettingTab {
                     .setLimits(2, 12, 1)
                     .setValue(this.plugin.settings.rowCount)
                     .onChange(async (value) => {
-                        rowText.innerText = ` ${value.toString()}`;
+                        rowText.innerText = ` ${ value.toString() }`;
                         this.plugin.settings.rowCount = value;
                     }),
             )
             .settingEl.createDiv("", (el) => {
-                rowText = el;
-                el.style.minWidth = "2.3em";
-                el.style.textAlign = "right";
-                el.innerText = ` ${this.plugin.settings.rowCount.toString()}`;
-            });
+            rowText = el;
+            el.className = "table-generator-setting-text";
+            el.innerText = ` ${ this.plugin.settings.rowCount.toString() }`;
+        });
 
         let columnText: HTMLDivElement;
         new Setting(containerEl)
@@ -186,16 +214,15 @@ class tableGeneratorSettingTab extends PluginSettingTab {
                     .setLimits(2, 12, 1)
                     .setValue(this.plugin.settings.columnCount)
                     .onChange(async (value) => {
-                        columnText.innerText = ` ${value.toString()}`;
+                        columnText.innerText = ` ${ value.toString() }`;
                         this.plugin.settings.columnCount = value;
                     }),
             )
             .settingEl.createDiv("", (el) => {
-                columnText = el;
-                el.style.minWidth = "2.3em";
-                el.style.textAlign = "right";
-                el.innerText = ` ${this.plugin.settings.columnCount.toString()}`;
-            });
+            columnText = el;
+            el.className = "table-generator-setting-text";
+            el.innerText = ` ${ this.plugin.settings.columnCount.toString() }`;
+        });
 
         this.containerEl.createEl('h2', { text: 'Say Thank You' });
 

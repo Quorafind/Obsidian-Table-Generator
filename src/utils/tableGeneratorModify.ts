@@ -1,3 +1,5 @@
+import { requireApiVersion } from "obsidian";
+
 export const generateMarkdownTable = (selectedGrid: number[]) => {
     let table = "";
     let secondLine = "";
@@ -22,4 +24,8 @@ export const generateMarkdownTable = (selectedGrid: number[]) => {
         if (i > 1) table = table + normalLine + "|\n";
     }
     return table;
+}
+
+export const hideTable = () => {
+    (requireApiVersion("0.15.0") ? activeDocument : document)?.getElementsByClassName("table-generator-view")[0].detach();
 }
