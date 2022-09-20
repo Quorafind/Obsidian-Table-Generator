@@ -66,7 +66,9 @@ export default class TableGeneratorPlugin extends Plugin {
         const target = evt.target as HTMLElement;
 
         if (!this.tableGeneratorEl || !target) return;
-        if (target.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu") || target?.tagName == "BUTTON") return;
+        if (target.classList.contains("table-generator-menu") ||
+            target.parentElement?.classList.contains("table-generator-menu") ||
+            target.tagName == "BUTTON") return;
         if (this.tableGeneratorEl?.contains(target)) return;
         if (!document.body.contains(this.tableGeneratorEl)) return;
 
@@ -77,14 +79,11 @@ export default class TableGeneratorPlugin extends Plugin {
         // Check if this tableGeneratorEl is already created, if so delete it;
         if (this.tableGeneratorEl) this.tableGeneratorEl.detach();
 
-        if (requireApiVersion("0.15.0")) {
-            this.tableGeneratorEl = activeDocument.createElement("div");
-            activeDocument.body.appendChild(this.tableGeneratorEl);
-        } else {
-            this.tableGeneratorEl = document.createElement("div");
-            document.body.appendChild(this.tableGeneratorEl);
-        }
 
+        this.tableGeneratorEl = (requireApiVersion("0.15.0") ? activeDocument : document)?.createElement("div");
+        document.body.appendChild(this.tableGeneratorEl);
+
+        if (!this.tableGeneratorEl) return;
         this.tableGeneratorEl.className = "table-generator-view";
         this.tableGeneratorEl.hide();
 
@@ -146,7 +145,7 @@ export default class TableGeneratorPlugin extends Plugin {
                 const target = evt.target as HTMLElement;
 
                 if (!this.tableGeneratorEl || !target) return;
-                if (target.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu") || target?.tagName == "BUTTON") return;
+                if (target.classList.contains("table-generator-menu") || target.parentElement?.classList.contains("table-generator-menu") || target.tagName == "BUTTON") return;
                 if (this.tableGeneratorEl?.contains(target)) return;
                 if (!activeDocument.body.contains(this.tableGeneratorEl)) return;
 
