@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { hideTable } from "../utils/modifiedTable";
+    import { hideTable } from "../utils/tableGeneratorModify";
 
     export let rowNum: number = 8;
     export let colNum: number = 8;
-    export let selectedTableEnd: number[];
     export let hoverTableEnd: number[];
+    export let insertTable: (selectedTableEnd: number[]) => {};
 
     let grid = [rowNum, colNum];
 
@@ -32,7 +32,7 @@
 
     function click(i: number, j: number) {
         if(j === 0) return;
-        selectedTableEnd = [i + 1, j + 1];
+        insertTable([i + 1, j + 1]);
         hideTable();
     }
 
@@ -47,7 +47,7 @@
     }
 </script>
 
-<div class="container" style="grid-template-rows: {row}; grid-template-columns: {col};" on:mouseleave={() => unHover()} on:blur={() => unHover()}>
+<div class="table-container" style="grid-template-rows: {row}; grid-template-columns: {col};" on:mouseleave={() => unHover()} on:blur={() => unHover()}>
     {#each {length: grid[0]} as _, i (i)}
         {#each {length: grid[1]} as _, j (j)}
             <div
@@ -62,22 +62,22 @@
 
 <style>
 
-    .container {
+    .table-container {
         display: grid;
-        border: 1px solid #999;
+        border: 2px dotted var(--color-base-40);
         border-radius: 2px;
         width: 150px;
         height: 150px;
         grid-gap: 1px;
-        background: #999;
+        background: var(--color-base-30);
     }
 
-    .container div {
-        background: #fff;
+    .table-container div {
+        background: var(--color-base-00);
     }
 
     div.active {
-        background-color: #DEF;
+        background-color: var(--color-base-50);
     }
 
 </style>

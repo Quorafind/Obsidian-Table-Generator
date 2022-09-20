@@ -1,8 +1,8 @@
 <script lang="ts">
     import Table from "./Table.svelte";
     import { Editor, Notice } from "obsidian";
-    import { generateMarkdownTable } from "../utils/generateTable";
-    import { hideTable } from "../utils/modifiedTable";
+    import { generateMarkdownTable } from "../utils/tableGeneratorModify";
+    import { hideTable } from "../utils/tableGeneratorModify";
     import type TableGeneratorPlugin from "../tableGeneratorIndex";
 
     export let editor: Editor;
@@ -11,11 +11,6 @@
     let hoverTableEnd: number[];
     let gridRow: number;
     let gridCol: number;
-
-    $: if (selectedTableEnd) {
-        // Generate Markdown Table Content
-        insertTable(selectedTableEnd);
-    }
 
     $: if (hoverTableEnd) {
         // Generate Markdown Table Content
@@ -58,15 +53,16 @@
 
 <div class="table-generator">
     <div class="H1">Table Generator</div>
-    <Table {...settings} bind:selectedTableEnd={selectedTableEnd} bind:hoverTableEnd={hoverTableEnd}/>
+    <Table {...settings} {insertTable} bind:selectedTableEnd={selectedTableEnd}
+           bind:hoverTableEnd={hoverTableEnd}/>
     <div class="input-table-generator">
-        <div>
+        <div class="input-table-generator-row">
             ROW:
-            <input bind:value={gridRow}>
+            <input class="row-input" bind:value={gridRow}>
         </div>
-        <div>
+        <div class="input-table-generator-col">
             COL:
-            <input bind:value={gridCol}>
+            <input class="col-input" bind:value={gridCol}>
         </div>
     </div>
     <button on:click={() => {
@@ -95,8 +91,15 @@
         align-items: center;
     }
 
+    .input-table-generator-row, .input-table-generator-col {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
     button {
-        border: black 1px solid;
+        color: var(--color-base-40);
+        border: var(--color-base-40) 1px solid;
         width: auto;
         height: auto;
         margin: 5px auto 5px;
@@ -107,13 +110,13 @@
     }
 
     button:hover {
-        background-color: bisque;
+        color: var(--color-base-80);
     }
 
     input {
         width: 30px;
         height: 18px;
-        border: black 1px solid;
+        border: 1px solid var(--color-base-50);
     }
 
     .H1 {
