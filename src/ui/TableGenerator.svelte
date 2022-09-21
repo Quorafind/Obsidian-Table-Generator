@@ -109,7 +109,7 @@
     }
 
     button:hover {
-        color: var(--color-base-80);
+        color: var(--color-base-70);
     }
 
     input {
