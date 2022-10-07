@@ -2,7 +2,6 @@
     import Table from "./Table.svelte";
     import { Editor, Notice } from "obsidian";
     import { generateMarkdownTable } from "../utils/tableGeneratorModify";
-    import { hideTable } from "../utils/tableGeneratorModify";
     import type TableGeneratorPlugin from "../tableGeneratorIndex";
 
     export let editor: Editor;
@@ -52,7 +51,7 @@
 
 <div class="table-generator">
     <div class="H1">Table Generator</div>
-    <Table {...settings} {insertTable}
+    <Table {...settings} {insertTable} {plugin}
            bind:hoverTableEnd={hoverTableEnd}/>
     <div class="input-table-generator">
         <div class="input-table-generator-row">
@@ -68,7 +67,7 @@
             if(/^\d+$/.test(gridRow.toString()) && /^\d+$/.test(gridCol.toString())) {
                 console.log(gridRow, gridCol);
                 insertTable([gridRow, gridCol]);
-                hideTable();
+                plugin.hideTable();
             }else {
                 new Notice("Please enter a valid number");
             }
