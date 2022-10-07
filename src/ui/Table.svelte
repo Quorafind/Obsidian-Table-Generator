@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { hideTable } from "../utils/tableGeneratorModify";
+    import type TableGeneratorPlugin from "../tableGeneratorIndex";
 
+    export let plugin: TableGeneratorPlugin;
     export let rowNum: number = 8;
     export let colNum: number = 8;
     export let hoverTableEnd: number[];
@@ -8,8 +9,8 @@
 
     let grid = [rowNum, colNum];
 
-    $: col = `repeat(${grid[1]}, 1fr)`;
-    $: row = `repeat(${grid[0]}, 1fr)`;
+    $: col = `repeat(${ grid[1] }, 1fr)`;
+    $: row = `repeat(${ grid[0] }, 1fr)`;
     $: is_active = Array(grid[0]).fill(0).map(_ => Array(grid[1]).fill(false));
 
     let start: number[] = [];
@@ -31,30 +32,31 @@
     }
 
     function click(i: number, j: number) {
-        if(j === 0) return;
+        if (j === 0) return;
         insertTable([i + 1, j + 1]);
-        hideTable();
+        plugin.hideTable();
     }
 
     function isInRange([i, j]: number[], [i2, j2]: number[]) {
         return ((i - start[0]) * (i - i2) <= 0) &&
-            ((j - start[1]) * (j - j2)<= 0)
+            ((j - start[1]) * (j - j2) <= 0)
     }
 
-    function checkActive (end: number[]) {
+    function checkActive(end: number[]) {
         is_active = is_active.map(
             (a, i) => a.map((_, j) => isInRange([i, j], end)));
     }
 </script>
 
-<div class="table-container" style="grid-template-rows: {row}; grid-template-columns: {col};" on:mouseleave={() => unHover()} on:blur={() => unHover()}>
+<div class="table-container" style:grid-template-rows={row} style:grid-template-columns={col}
+     on:mouseleave={() => unHover()} on:blur={() => unHover()}>
     {#each {length: grid[0]} as _, i (i)}
         {#each {length: grid[1]} as _, j (j)}
             <div
-                 class="table-generator-cell"
-                 class:active={is_active[i][j]}
-                 on:mouseenter={() => hover(i, j)}
-                 on:click={() => click(i, j)}
+                class="table-generator-cell"
+                class:active={is_active[i][j]}
+                on:mouseenter={() => hover(i, j)}
+                on:click={() => click(i, j)}
             ></div>
         {/each}
     {/each}

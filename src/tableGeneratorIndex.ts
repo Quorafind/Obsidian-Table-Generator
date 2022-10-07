@@ -62,6 +62,10 @@ export default class TableGeneratorPlugin extends Plugin {
         });
     }
 
+    hideTable() {
+        this.tableGeneratorEl?.detach();
+    }
+
     handleHideTableGeneratorMenu(evt: MouseEvent) {
         const target = evt.target as HTMLElement;
 
@@ -73,24 +77,6 @@ export default class TableGeneratorPlugin extends Plugin {
         if (!document.body.contains(this.tableGeneratorEl)) return;
 
         this.tableGeneratorEl.detach();
-    }
-
-    createTableGeneratorMenu(editor: Editor, plugin: TableGeneratorPlugin) {
-        // Check if this tableGeneratorEl is already created, if so delete it;
-        if (this.tableGeneratorEl) this.tableGeneratorEl.detach();
-
-
-        this.tableGeneratorEl = (requireApiVersion("0.15.0") ? activeDocument : document)?.createElement("div");
-        document.body.appendChild(this.tableGeneratorEl);
-
-        if (!this.tableGeneratorEl) return;
-        this.tableGeneratorEl.className = "table-generator-view";
-        this.tableGeneratorEl.hide();
-
-        this.tableGeneratorComponent = new TableGenerator({
-            target: this.tableGeneratorEl,
-            props: { editor: editor, plugin: plugin }
-        });
     }
 
     handleCreateTableGeneratorInMenu(menu: Menu, editor: Editor, view: MarkdownView) {
@@ -107,6 +93,20 @@ export default class TableGeneratorPlugin extends Plugin {
         });
     }
 
+    createTableGeneratorMenu(editor: Editor, plugin: TableGeneratorPlugin) {
+        // Check if this tableGeneratorEl is already created, if so delete it;
+        // Used for Multi popout windows.
+        if (this.tableGeneratorEl && !activeDocument.body.contains(this.tableGeneratorEl)) this.tableGeneratorEl.detach();
+
+        this.tableGeneratorEl = (requireApiVersion("0.15.0") ? activeDocument : document)?.body.createEl("div", { cls: "table-generator-view" });
+
+        this.tableGeneratorEl.hide();
+
+        this.tableGeneratorComponent = new TableGenerator({
+            target: this.tableGeneratorEl,
+            props: { editor: editor, plugin: plugin }
+        });
+    }
 
     showTableGeneratorView(editor: Editor, tableGeneratorBoard: HTMLElement | null) {
         if (!tableGeneratorBoard) return;
