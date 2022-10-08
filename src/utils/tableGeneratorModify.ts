@@ -1,5 +1,3 @@
-import { requireApiVersion } from "obsidian";
-
 export const generateMarkdownTable = (selectedGrid: number[]) => {
     let table = "";
     let secondLine = "";
