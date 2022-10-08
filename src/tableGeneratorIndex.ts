@@ -40,14 +40,11 @@ export default class TableGeneratorPlugin extends Plugin {
         this.addCommand({
             id: 'create-table-genertator',
             name: 'Create Table Generator',
-            callback: () => {
+            editorCallback: (editor: Editor, view: MarkdownView) => {
                 if ((requireApiVersion("0.15.0") ? activeDocument : document)?.body.contains(this.tableGeneratorEl)) return;
-                const activeLeaf = app.workspace.getActiveViewOfType(MarkdownView);
-                if (activeLeaf) {
-                    const editor = activeLeaf.editor;
-                    this.createTableGeneratorMenu(editor, this);
-                    this.showTableGeneratorView(editor, this.tableGeneratorEl);
-                }
+
+                this.createTableGeneratorMenu(editor, this);
+                this.showTableGeneratorView(editor, this.tableGeneratorEl);
             }
 
         });
