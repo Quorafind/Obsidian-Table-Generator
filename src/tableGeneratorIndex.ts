@@ -1,12 +1,4 @@
-import {
-    App,
-    Editor,
-    MarkdownView,
-    Menu,
-    Plugin,
-    PluginSettingTab, requireApiVersion,
-    Setting
-} from 'obsidian';
+import { App, Editor, MarkdownView, Menu, Plugin, PluginSettingTab, requireApiVersion, Setting } from 'obsidian';
 import TableGenerator from "./ui/TableGenerator.svelte";
 import "./css/tableGeneratorDefault.css";
 
@@ -47,13 +39,12 @@ export default class TableGeneratorPlugin extends Plugin {
 
         this.addCommand({
             id: 'create-table-genertator',
-            name: 'createTableGenerator',
+            name: 'Create Table Generator',
             callback: () => {
-                if (activeDocument.body.querySelector(".table-generator-view")) return;
+                if ((requireApiVersion("0.15.0") ? activeDocument : document)?.body.contains(this.tableGeneratorEl)) return;
                 const activeLeaf = app.workspace.getActiveViewOfType(MarkdownView);
                 if (activeLeaf) {
-                    const view = activeLeaf;
-                    const editor = view.editor;
+                    const editor = activeLeaf.editor;
                     this.createTableGeneratorMenu(editor, this);
                     this.showTableGeneratorView(editor, this.tableGeneratorEl);
                 }
