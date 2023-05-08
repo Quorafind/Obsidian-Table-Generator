@@ -16,7 +16,7 @@ A plugin for generate markdown table quickly like Typora.
 
 ### From Plugin Market in Obsidian
 
-💜: [Not available now] Directly install from Obsidian Market.
+💜: [Table Generator](obsidian://show-plugin?id=obsidian-table-generator) is available from the official community plugins list.
 
 ### From BRAT
 
