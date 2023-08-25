@@ -6,7 +6,8 @@ A plugin for generate markdown table quickly like Typora.
 
 # Features
 
-- You can use `obsidian-table-generator` to generate markdown table quickly.
+- Use `obsidian-table-generator` to generate markdown table quickly.
+- Generate card like table in canvas file quickly.
 
 # Settings
 
