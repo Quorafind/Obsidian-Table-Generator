@@ -170,7 +170,9 @@ export default class TableGeneratorPlugin extends Plugin {
                 if ((requireApiVersion("0.15.0") ? activeDocument : document)?.body.contains(this.tableGeneratorEl)) return;
 
                 this.createGeneratorMenu("table", { editor: editor }, this);
-                calculateEditor(editor, this.tableGeneratorEl);
+                const coords = calculateEditor(editor, this.tableGeneratorEl);
+                if(!coords) return;
+                setTableGeneratorMenuPosition(this.tableGeneratorEl, coords, "editor");
             }
         });
     }
