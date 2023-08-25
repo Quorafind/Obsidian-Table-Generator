@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-table-generator",
 	"name": "Table Generator",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"minAppVersion": "1.1.0",
 	"description": "A plugin for generate markdown table quickly like Typora /card table in canvas .",
 	"author": "Boninall",
