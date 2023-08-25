@@ -24,6 +24,7 @@
     --color-base-60: #707070;
     --color-base-70: #5a5a5a;
     --color-base-100: #222222;
+    --active-color: rgb(224 242 254);
 }
 
 .theme-dark .table-generator-view {
@@ -38,4 +39,5 @@
     --color-base-60: #999;
     --color-base-70: #bababa;
     --color-base-100: #dadada;
+    --active-color: rgb(3 105 161);
 }

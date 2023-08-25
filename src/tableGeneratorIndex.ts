@@ -1,22 +1,37 @@
-import { App, Editor, MarkdownView, Menu, Plugin, PluginSettingTab, requireApiVersion, Setting } from 'obsidian';
+import {
+    App,
+    Editor,
+    MarkdownView,
+    Menu,
+    MenuItem,
+    Plugin,
+    PluginSettingTab,
+    requireApiVersion,
+    Setting
+} from 'obsidian';
 import TableGenerator from "./ui/TableGenerator.svelte";
 import "./css/tableGeneratorDefault.css";
+import { calculateEditor, reverseCalculation } from "./utils/tablePOS";
+import { around } from "monkey-around";
+import CardGenerator from "./ui/CardGenerator.svelte";
+import { handleHideTableGeneratorMenu, setTableGeneratorMenuPosition } from "./utils/tableDOM";
 
 interface TableGeneratorPluginSettings {
     rowCount: number;
     columnCount: number;
+    defaultAlignment: AlignMode;
+    defaultCardWidth: number;
+    defaultCardHeight: number;
 }
 
-interface Coords {
-    top: number;
-    left: number;
-    bottom: number;
-    height: number;
-}
+
 
 const DEFAULT_SETTINGS: TableGeneratorPluginSettings = {
     rowCount: 8,
-    columnCount: 8
+    columnCount: 8,
+    defaultAlignment: "left",
+    defaultCardWidth: 160,
+    defaultCardHeight: 160,
 }
 
 export default class TableGeneratorPlugin extends Plugin {
@@ -29,42 +44,17 @@ export default class TableGeneratorPlugin extends Plugin {
             this.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, view: MarkdownView) => this.handleCreateTableGeneratorInMenu(menu, editor, view))
         );
 
-        // Register Settings Stuff
         await this.registerSettings();
-
-        // Check click and cancel the menu if the click is outside the menu
-        this.registerDomEvent(window, 'click', (evt: MouseEvent) => this.handleHideTableGeneratorMenu(evt));
+        this.registerDomEvent(window, 'click', (evt: MouseEvent) => handleHideTableGeneratorMenu(evt, this.tableGeneratorEl));
         // Handle same mouseevent in multi windows when used in newer version like 0.15.0
         if (requireApiVersion("0.15.0")) this.registerTableGeneratorMenu();
 
-        this.addCommand({
-            id: 'create-table-genertator',
-            name: 'Create Table Generator',
-            editorCallback: (editor: Editor, view: MarkdownView) => {
-                if ((requireApiVersion("0.15.0") ? activeDocument : document)?.body.contains(this.tableGeneratorEl)) return;
-
-                this.createTableGeneratorMenu(editor, this);
-                this.showTableGeneratorView(editor, this.tableGeneratorEl);
-            }
-
-        });
+        this.registerCommands();
+        this.registerCanvasMenu();
     }
 
     hideTable() {
         this.tableGeneratorEl?.detach();
-    }
-
-    handleHideTableGeneratorMenu(evt: MouseEvent) {
-        const target = evt.target as HTMLElement;
-
-        if (!this.tableGeneratorEl || !target) return;
-        if (target.classList.contains("table-generator-menu") ||
-            target.parentElement?.classList.contains("table-generator-menu") ||
-            target.tagName == "BUTTON") return;
-        if (this.tableGeneratorEl?.contains(target)) return;
-        if (!document.body.contains(this.tableGeneratorEl)) return;
-
-        this.tableGeneratorEl.detach();
     }
 
     handleCreateTableGeneratorInMenu(menu: Menu, editor: Editor, view: MarkdownView) {
@@ -72,51 +62,44 @@ export default class TableGeneratorPlugin extends Plugin {
             const itemDom = (item as any).dom as HTMLElement;
             itemDom.addClass("table-generator-menu");
             item
-                .setTitle("Table Generator")
+                .setTitle("Add Markdown Table")
                 .setIcon("table")
+                .setSection("action")
                 .onClick(async () => {
-                    this.createTableGeneratorMenu(editor, this);
-                    this.showTableGeneratorView(editor, this.tableGeneratorEl);
+                    this.createGeneratorMenu("table", { editor: editor }, this);
+                    const coords = calculateEditor(editor, this.tableGeneratorEl);
+                    if(!coords) return;
+                    setTableGeneratorMenuPosition(this.tableGeneratorEl, coords, "editor");
                 });
         });
     }
 
-    createTableGeneratorMenu(editor: Editor, plugin: TableGeneratorPlugin) {
+    createGeneratorMenu(
+        type: "table" | "card",
+        context: { editor?: Editor, canvas?: any, coords?: { x: number, y: number } },
+        plugin: TableGeneratorPlugin
+    ) {
         // Check if this tableGeneratorEl is already created, if so delete it;
         // Used for Multi popout windows.
-        if (this.tableGeneratorEl && !activeDocument.body.contains(this.tableGeneratorEl)) this.tableGeneratorEl.detach();
+        if (this.tableGeneratorEl) this.tableGeneratorEl.detach();
 
         this.tableGeneratorEl = (requireApiVersion("0.15.0") ? activeDocument : document)?.body.createEl("div", { cls: "table-generator-view" });
-
         this.tableGeneratorEl.hide();
 
-        this.tableGeneratorComponent = new TableGenerator({
-            target: this.tableGeneratorEl,
-            props: { editor: editor, plugin: plugin }
-        });
-    }
-
-    showTableGeneratorView(editor: Editor, tableGeneratorBoard: HTMLElement | null) {
-        if (!tableGeneratorBoard) return;
-
-        const cursor = editor.getCursor('from');
-        let coords: Coords;
-
-        // Get the cursor position using the appropriate CM5 or CM6 interface
-        if ((editor as any).cursorCoords) {
-            coords = (editor as any).cursorCoords(true, 'window');
-        } else if ((editor as any).coordsAtPos) {
-            const offset = editor.posToOffset(cursor);
-            coords = (editor as any).cm.coordsAtPos?.(offset) ?? (editor as any).coordsAtPos(offset);
-        } else {
-            return;
+        if (type === "table") {
+            this.tableGeneratorComponent = new TableGenerator({
+                target: this.tableGeneratorEl,
+                props: { editor: context.editor, plugin: plugin }
+            });
+        } else if (type === "card") {
+            this.tableGeneratorComponent = new CardGenerator({
+                target: this.tableGeneratorEl,
+                props: { canvas: context.canvas, coords: context.coords, plugin: plugin }
+            });
         }
-
-        const calculateTop = (requireApiVersion("0.15.0") ?
-            activeDocument : document)?.body.getBoundingClientRect().height - coords.top - coords.height;
-        tableGeneratorBoard.style.transform = "translate(" + (coords.left) + "px, " + "-" + (calculateTop) + "px" + ")";
-        tableGeneratorBoard.style.display = 'unset';
     }
+
+
 
     async registerSettings() {
         await this.loadSettings();
@@ -125,6 +108,71 @@ export default class TableGeneratorPlugin extends Plugin {
                 this.saveSettings();
             }, 100)
         );
+    }
+
+    registerCanvasMenu() {
+        const createCardTable = (canvas: any, e: Menu, t: {
+            x: number;
+            y: number;
+        }, a: any) => {
+            const { top, left } = e.dom.getBoundingClientRect();
+            const data = reverseCalculation(t, canvas);
+            console.log(data);
+            setTimeout(()=>{
+                this.createGeneratorMenu("card", { canvas: canvas, coords: t }, this);
+                setTableGeneratorMenuPosition(this.tableGeneratorEl, { top: top , left: left, bottom: 0, height: 0 }, "canvas");
+            }, 0);
+        }
+
+        const patchNode = () => {
+            const canvasView = this.app.workspace.getLeavesOfType("canvas").first()?.view;
+            // @ts-ignore
+            const canvas = canvasView?.canvas;
+            if(!canvas) return false;
+
+            const uninstaller = around(canvas.constructor.prototype, {
+                showCreationMenu: (next: any) =>
+                    function (e: Menu, t:any, a:any) {
+                        const result = next.call(this, e, t, a);
+                        e.addSeparator().addItem((item: MenuItem) => {
+                            item.setSection("create")
+                                .setTitle("Add Card Table")
+                                .setIcon("table")
+                                .onClick(async () => {
+                                    createCardTable(this, e, t, a);
+                                });
+                        });
+                        return result;
+
+                    },
+            });
+            this.register(uninstaller);
+
+            console.log("Obsidian-Canvas-MindMap: canvas node patched");
+            return true;
+        }
+
+        this.app.workspace.onLayoutReady(() => {
+            if (!patchNode()) {
+                const evt = this.app.workspace.on("layout-change", () => {
+                    patchNode() && this.app.workspace.offref(evt);
+                });
+                this.registerEvent(evt);
+            }
+        });
+    }
+
+    registerCommands() {
+        this.addCommand({
+            id: 'create-table-genertator',
+            name: 'Create Table Generator',
+            editorCallback: (editor: Editor, view: MarkdownView) => {
+                if ((requireApiVersion("0.15.0") ? activeDocument : document)?.body.contains(this.tableGeneratorEl)) return;
+
+                this.createGeneratorMenu("table", { editor: editor }, this);
+                calculateEditor(editor, this.tableGeneratorEl);
+            }
+        });
     }
 
     registerTableGeneratorMenu() {
