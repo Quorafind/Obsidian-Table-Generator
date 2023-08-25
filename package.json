@@ -1,7 +1,7 @@
 {
     "name": "obsidian-table-generator",
-    "version": "1.3.1",
-    "description": "A plugin for generate markdown table quickly like Typora.",
+    "version": "1.4",
+    "description": "A plugin for generate markdown table quickly like Typora /card table in canvas .",
     "main": "main.js",
     "scripts": {
         "lint": "eslint . --ext .ts",
@@ -27,6 +27,12 @@
         "svelte-preprocess": "^4.10.7",
         "tslib": "2.4.0",
         "typescript": "4.8.3",
-        "vite": "^3.1.3"
+        "vite": "4.4.8",
+        "monkey-around": "^2.3.0"
+    },
+    "dependencies": {
+        "@codemirror/state": "^6.2.1",
+        "@codemirror/view": "^6.16.0"
+
     }
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type TableGeneratorPlugin from "../tableGeneratorIndex";
+    import type TableGeneratorPlugin from "../../tableGeneratorIndex";
 
     export let plugin: TableGeneratorPlugin;
     export let rowNum: number = 8;
@@ -66,20 +66,28 @@
 
     .table-container {
         display: grid;
-        border: 2px dotted var(--color-base-40);
-        border-radius: 2px;
-        width: 150px;
+        border-bottom: 2px dotted var(--color-base-40);
+        border-top: 2px dotted var(--color-base-40);
+        padding-top: var(--size-2-1);
+        padding-bottom: var(--size-2-1);
+        width: 100%;
         height: 150px;
         grid-gap: 1px;
-        background: var(--color-base-30);
     }
 
     .table-container div {
         background: var(--color-base-00);
+        border-radius: var(--radius-s);
+        border: 1px solid var(--color-base-40);
+    }
+
+    .table-container .table-generator-cell {
+        height: var(--size-4-4);
+        width: var(--size-4-4);
     }
 
     div.active {
-        background-color: var(--color-base-50);
+        background-color: var(--active-color);
     }
 
 </style>
